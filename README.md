@@ -1,8 +1,7 @@
 peepdf is a **Python 3.12+ tool to explore PDF files** in order to find out if the file can be harmful or not. The aim of this tool is to provide all the necessary components that
 a security researcher could need in a PDF analysis without using 3 or 4 tools to make
 all the tasks. With peepdf it's possible to see all the objects in the document showing
-the suspicious elements, supports all the most used filters and encodings, it can parse different versions of a file, object streams and encrypted files. XML and JSON outputs are natively supported using standard library components without external dependencies. With optional installation
-of [PyV8](https://github.com/buffer/pyv8) and [Pylibemu](https://github.com/buffer/pylibemu) it provides **Javascript and shellcode analysis** wrappers too. Apart from this it's able to create new PDF files and to modify/obfuscate existent ones.
+the suspicious elements, supports all the most used filters and encodings, it can parse different versions of a file, object streams and encrypted files. XML and JSON outputs are natively supported using standard library components without external dependencies. Static analysis, stream extraction, and report generation work out of the box. Optional wrappers for **Javascript execution** ([STPyV8](https://github.com/area1/stpyv8) / PyV8) and **shellcode analysis** ([Pylibemu](https://github.com/buffer/pylibemu) / sctest) are supported when installed. Apart from this it's able to create new PDF files and to modify/obfuscate existent ones.
 
 The main functionalities of peepdf are the following:
 
@@ -17,7 +16,7 @@ The main functionalities of peepdf are the following:
   * Metadata
   * Modifications between versions (changelog)
   * Compressed objects (object streams)
-  * Analysis and modification of Javascript (PyV8): unescape, replace, join
+  * Analysis and modification of Javascript: unescape, replace, join (dynamic evaluation via STPyV8 / PyV8)
   * Shellcode analysis (Libemu python wrapper, pylibemu)
   * Variables (set command)
   * Extraction of old versions of the document

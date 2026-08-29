@@ -8,18 +8,20 @@ http://twitter.com/peepdf
 
 - Python 3.12+ is required.
 
-- XML output is natively supported using the Python Standard Library (`xml.etree.ElementTree`). No external `lxml` installation is required!
+- XML and JSON outputs are natively supported using the Python Standard Library (`xml.etree.ElementTree` and `json`). No external `lxml` installation is required!
 
 - VirusTotal API lookup requires setting the `PEEPDF_VT_KEY` environment variable:
 
     export PEEPDF_VT_KEY="your_virustotal_api_key"
 
-- Optional dependencies for advanced analysis:
+- Note on Optional Dependencies for Dynamic Analysis:
+  `peepdf` works out-of-the-box for static analysis, PDF decoding, stream extraction, and report generation without any extra tools.
+  For dynamic execution features, the following optional tools can be installed:
 
-  * In order to analyse Javascript code "PyV8" or compatible JS engine wrappers can be installed.
-  * The "sctest" command uses pylibemu for shellcode analysis.
-  * Colorama (included or installed via pip) for colorized terminal output.
-  * Pillow / PIL for image processing.
+  * **JavaScript Analysis (`eval` hooking)**: Originally required legacy PyV8. On Python 3, [STPyV8](https://github.com/area1/stpyv8) (`pip install stpyv8`) provides a modern Python 3 V8 binding and acts as a drop-in replacement.
+  * **Shellcode Emulation (`sctest`)**: Uses `pylibemu` (or [Unicorn Engine](https://www.unicorn-engine.org/)) for x86 shellcode emulation.
+  * **Colorama**: (Included or `pip install colorama`) for colorized terminal output.
+  * **Pillow / PIL**: (`pip install Pillow`) for image stream processing.
 
 - Included modules: lzw, colorama, jsbeautifier, ccitt, pythonaes (Thanks to all the developers!!)
 
