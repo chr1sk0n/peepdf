@@ -16,7 +16,7 @@ __author__ = "Adam Newman"
 
 #Normally use relative import. In test mode use local import.
 try:from .aes_tables import sbox,rcon
-except ValueError:from aes_tables import sbox,rcon
+except ValueError:from .aes_tables import sbox,rcon
 from operator import xor
 class KeyExpander:
     """Perform AES Key Expansion"""
@@ -54,21 +54,21 @@ class KeyExpander:
             keyarr=[sbox[i] for i in new_key[-3:]+new_key[-4:-3]]
             #First byte of output array is XORed with rcon(iter)
             keyarr[0] ^= rcon[rcon_iter]
-            nex(map(xor,keyarr, new_key[-self._n:4-self._n]))
+            nex(list(map(xor,keyarr, new_key[-self._n:4-self._n])))
             rcon_iter += 1
             len_new_key += 4
 
             #Run three passes of 4 byte expansion using copy of 4 byte tail of extended key
             #which is then xor'd with 4 bytes n bytes from end of extended key
             for j in 0,1,2:
-                nex(map(xor,new_key[-4:], new_key[-self._n:4-self._n]))
+                nex(list(map(xor,new_key[-4:], new_key[-self._n:4-self._n])))
                 len_new_key += 4
             if len_new_key >= self._b:return new_key
             else:
                 #If key length is 256 and key is not complete, add 4 bytes tail of extended key
                 #run through sbox before xor with 4 bytes n bytes from end of extended key
                 if self._key_length == 256:
-                    nex(map(xor,[sbox[x] for x in new_key[-4:]], new_key[-self._n:4-self._n]))
+                    nex(list(map(xor,[sbox[x] for x in new_key[-4:]], new_key[-self._n:4-self._n])))
                     len_new_key += 4
                     if len_new_key >= self._b:return new_key
 
@@ -76,7 +76,7 @@ class KeyExpander:
                 #of 4 byte tail of extended key xor with 4 bytes n bytes from end of extended key
                 if self._key_length != 128:
                     for j in ((0,1) if self._key_length == 192 else (0,1,2)):
-                        nex(map(xor,new_key[-4:], new_key[-self._n:4-self._n]))
+                        nex(list(map(xor,new_key[-4:], new_key[-self._n:4-self._n])))
                         len_new_key += 4
                     if len_new_key >= self._b:return new_key
 
@@ -84,7 +84,7 @@ import unittest
 class TestKeyExpander(unittest.TestCase):
     def test_keys(self):
         """Test All Key Expansions"""
-        import test_keys
+        from . import test_keys
         test_data = test_keys.TestKeys()
         for key_size in 128, 192, 256:
             test_expander = KeyExpander(key_size)

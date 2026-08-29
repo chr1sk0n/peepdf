@@ -1,8 +1,8 @@
-peepdf is a **Python tool to explore PDF files** in order to find out if the file can be harmful or not. The aim of this tool is to provide all the necessary components that
+peepdf is a **Python 3.12+ tool to explore PDF files** in order to find out if the file can be harmful or not. The aim of this tool is to provide all the necessary components that
 a security researcher could need in a PDF analysis without using 3 or 4 tools to make
 all the tasks. With peepdf it's possible to see all the objects in the document showing
-the suspicious elements, supports all the most used filters and encodings, it can parse different versions of a file, object streams and encrypted files. With the installation
-of [PyV8](https://github.com/buffer/pyv8) and [Pylibemu](https://github.com/buffer/pylibemu) it provides **Javascript and shellcode analysis** wrappers too. Apart of this it's able to create new PDF files and to modify/obfuscate existent ones.
+the suspicious elements, supports all the most used filters and encodings, it can parse different versions of a file, object streams and encrypted files. XML and JSON outputs are natively supported using standard library components without external dependencies. With optional installation
+of [PyV8](https://github.com/buffer/pyv8) and [Pylibemu](https://github.com/buffer/pylibemu) it provides **Javascript and shellcode analysis** wrappers too. Apart from this it's able to create new PDF files and to modify/obfuscate existent ones.
 
 The main functionalities of peepdf are the following:
 
@@ -22,13 +22,14 @@ The main functionalities of peepdf are the following:
   * Variables (set command)
   * Extraction of old versions of the document
   * Easy extraction of objects, Javascript code, shellcodes (>, >>, $>, $>>)
-  * Checking hashes on **VirusTotal**
+  * Checking hashes on **VirusTotal** (using the `PEEPDF_VT_KEY` environment variable)
+  * XML (`-x`) and JSON (`-j`) structured exports (natively supported via standard library)
 
 
 **Creation/Modification:**
 
   * Basic PDF creation
-  * Creation of PDF with Javascript executed wen the document is opened
+  * Creation of PDF with Javascript executed when the document is opened
   * Creation of object streams to compress objects
   * Embedded PDFs
   * Strings and names obfuscation
@@ -39,7 +40,7 @@ The main functionalities of peepdf are the following:
 
 **Execution modes:**
 
-  * Simple command line execution
+  * Simple command line execution (`python3 peepdf.py -h` for options overview)
   * **Powerful interactive console** (colorized or not)
   * Batch mode
 

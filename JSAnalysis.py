@@ -51,7 +51,7 @@ except:
 
 errorsFile = 'errors.txt'
 newLine = os.linesep         
-reJSscript = '<script[^>]*?contentType\s*?=\s*?[\'"]application/x-javascript[\'"][^>]*?>(.*?)</script>'
+reJSscript = r'<script[^>]*?contentType\s*?=\s*?[\'"]application/x-javascript[\'"][^>]*?>(.*?)</script>'
 preDefinedCode = 'var app = this;'
 
 
@@ -107,7 +107,7 @@ def analyseJS(code, context=None, manualAnalysis=False):
                     break
             
             if code != '':
-                escapedVars = re.findall('(\w*?)\s*?=\s*?(unescape\((.*?)\))', code, re.DOTALL)
+                escapedVars = re.findall(r'(\w*?)\s*?=\s*?(unescape\((.*?)\))', code, re.DOTALL)
                 for var in escapedVars:
                     bytes = var[2]
                     if bytes.find('+') != -1 or bytes.find('%') == -1:
@@ -116,7 +116,7 @@ def analyseJS(code, context=None, manualAnalysis=False):
                             ret = unescape(varContent)
                             if ret[0] != -1:
                                 bytes = ret[1]
-                                urls = re.findall('https?://.*$', bytes, re.DOTALL)
+                                urls = re.findall(r'https?://.*$', bytes, re.DOTALL)
                                 if bytes not in unescapedBytes:
                                    unescapedBytes.append(bytes)
                                 for url in urls:
@@ -128,7 +128,7 @@ def analyseJS(code, context=None, manualAnalysis=False):
                             ret = unescape(bytes)
                             if ret[0] != -1:
                                 bytes = ret[1]
-                                urls = re.findall('https?://.*$', bytes, re.DOTALL)
+                                urls = re.findall(r'https?://.*$', bytes, re.DOTALL)
                                 if bytes not in unescapedBytes:
                                    unescapedBytes.append(bytes)
                                 for url in urls:
@@ -159,11 +159,11 @@ def getVarContent(jsCode, varContent):
     varContent = varContent.replace(' ', '')
     parts = varContent.split('+')
     for part in parts:
-        if re.match('["\'].*?["\']', part, re.DOTALL):
+        if re.match(r'["\'].*?["\']', part, re.DOTALL):
             clearBytes += part[1:-1]
         else:
             part = escapeString(part)
-            varContent = re.findall(part + '\s*?=\s*?(.*?)[,;]', jsCode, re.DOTALL)
+            varContent = re.findall(part + r'\s*?=\s*?(.*?)[,;]', jsCode, re.DOTALL)
             if varContent:
                 clearBytes += getVarContent(jsCode, varContent[0])
     return clearBytes
@@ -179,8 +179,8 @@ def isJavascript(content):
     jsStrings = ['var ', ';', ')', '(', 'function ', '=', '{', '}', 'if ', 'else', 'return', 'while ', 'for ',
                  ',', 'eval']
     keyStrings = [';', '(', ')']
-    reVarInit = 'var [\w0-9]+\s*?='
-    reFunctionCall = '[\w0-9]+\s*?\(.*?\)\s*?;'
+    reVarInit = r'var [\w0-9]+\s*?='
+    reFunctionCall = r'[\w0-9]+\s*?\(.*?\)\s*?;'
     stringsFound = []
     limit = 15
     minDistinctStringsFound = 4
@@ -223,21 +223,21 @@ def searchObfuscatedFunctions(jsCode, function):
     '''
     obfuscatedFunctionsInfo = []
     if jsCode != None:
-        match = re.findall('\W('+function+'\s{0,5}?\((.*?)\)\s{0,5}?;)', jsCode, re.DOTALL)
+        match = re.findall(r'\W(' + function + r'\s{0,5}?\((.*?)\)\s{0,5}?;)', jsCode, re.DOTALL)
         if match:
            for m in match:
-              if re.findall('return', m[1], re.IGNORECASE):
+              if re.findall(r'return', m[1], re.IGNORECASE):
                  obfuscatedFunctionsInfo.append([function, m, True])
               else:
                  obfuscatedFunctionsInfo.append([function, m, False])
-        obfuscatedFunctions = re.findall('\s*?((\w*?)\s*?=\s*?'+function+')\s*?;', jsCode, re.DOTALL)
+        obfuscatedFunctions = re.findall(r'\s*?((\w*?)\s*?=\s*?' + function + r')\s*?;', jsCode, re.DOTALL)
         for obfuscatedFunction in obfuscatedFunctions:
            obfuscatedElement = obfuscatedFunction[1]
            obfuscatedFunctionsInfo += searchObfuscatedFunctions(jsCode, obfuscatedElement)
     return obfuscatedFunctionsInfo
 
 
-def unescape(escapedBytes, unicode = True):
+def unescape(escapedBytes, str = True):
     '''
         This method unescapes the given string
         
@@ -246,13 +246,13 @@ def unescape(escapedBytes, unicode = True):
     '''
     #TODO: modify to accept a list of escaped strings?
     unescapedBytes = ''
-    if unicode:
+    if str:
         unicodePadding = '\x00'
     else:
         unicodePadding = ''
     try:
-        if escapedBytes.lower().find('%u') != -1 or escapedBytes.lower().find('\u') != -1 or escapedBytes.find('%') != -1:
-            if escapedBytes.lower().find('\u') != -1:
+        if escapedBytes.lower().find('%u') != -1 or escapedBytes.lower().find('\\u') != -1 or escapedBytes.find('%') != -1:
+            if escapedBytes.lower().find('\\u') != -1:
                 splitBytes = escapedBytes.split('\\')
             else:
                 splitBytes = escapedBytes.split('%')
@@ -260,12 +260,12 @@ def unescape(escapedBytes, unicode = True):
                 splitByte = splitBytes[i]
                 if splitByte == '':
                     continue
-                if len(splitByte) > 4 and re.match('u[0-9a-f]{4}', splitByte[:5], re.IGNORECASE):
+                if len(splitByte) > 4 and re.match(r'u[0-9a-f]{4}', splitByte[:5], re.IGNORECASE):
                     unescapedBytes += chr(int(splitByte[3]+splitByte[4], 16))+chr(int(splitByte[1]+splitByte[2],16))
                     if len(splitByte) > 5:
                         for j in range(5,len(splitByte)): 
                             unescapedBytes += splitByte[j] + unicodePadding
-                elif len(splitByte) > 1 and re.match('[0-9a-f]{2}', splitByte[:2], re.IGNORECASE):
+                elif len(splitByte) > 1 and re.match(r'[0-9a-f]{2}', splitByte[:2], re.IGNORECASE):
                     unescapedBytes += chr(int(splitByte[0]+splitByte[1], 16)) + unicodePadding
                     if len(splitByte) > 2:
                         for j in range(2,len(splitByte)): 

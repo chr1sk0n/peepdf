@@ -29,9 +29,9 @@
 
 import sys
 import os
-import optparse
+import argparse
 import re
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import hashlib
 import traceback
 import json
@@ -40,7 +40,7 @@ from PDFCore import PDFParser, vulnsDict
 from PDFUtils import vtcheck
 
 
-VT_KEY = 'fc90df3f5ac749a94a94cb8bf87e05a681a2eb001aef34b6a0084b8c22c97a64'
+VT_KEY = os.environ.get('PEEPDF_VT_KEY')
 
 try:
     import PyV8
@@ -68,7 +68,7 @@ except:
 def getRepPaths(url, path=''):
     paths = []
     try:
-        browsingPage = urllib2.urlopen(url + path).read()
+        browsingPage = urllib.request.urlopen(url + path).read()
     except:
         sys.exit('[x] Connection error while getting browsing page "' + url + path + '"')
     browsingPageObject = json.loads(browsingPage)
@@ -83,14 +83,14 @@ def getRepPaths(url, path=''):
 
 def getLocalFilesInfo(filesList):
     localFilesInfo = {}
-    print '[-] Getting local files information...'
+    print('[-] Getting local files information...')
     for path in filesList:
         absFilePath = os.path.join(absPeepdfRoot, path)
         if os.path.exists(absFilePath):
             content = open(absFilePath, 'rb').read()
             shaHash = hashlib.sha256(content).hexdigest()
             localFilesInfo[path] = [shaHash, absFilePath]
-    print '[+] Done'
+    print('[+] Done')
     return localFilesInfo
 
 
@@ -214,7 +214,7 @@ def getPeepXML(statsDict, version, revision):
                 elementsList = etree.SubElement(suspicious, 'elements')
                 for element in elements:
                     elementInfo = etree.SubElement(elementsList, 'element', name=element)
-                    if vulnsDict.has_key(element):
+                    if element in vulnsDict:
                         vulnName = vulnsDict[element][0]
                         vulnCVEList = vulnsDict[element][1]
                         for vulnCVE in vulnCVEList:
@@ -226,7 +226,7 @@ def getPeepXML(statsDict, version, revision):
                 vulnsList = etree.SubElement(suspicious, 'js_vulns')
                 for vuln in vulns:
                     vulnInfo = etree.SubElement(vulnsList, 'vulnerable_function', name=vuln)
-                    if vulnsDict.has_key(vuln):
+                    if vuln in vulnsDict:
                         vulnName = vulnsDict[vuln][0]
                         vulnCVEList = vulnsDict[vuln][1]
                         for vulnCVE in vulnCVEList:
@@ -240,7 +240,12 @@ def getPeepXML(statsDict, version, revision):
             for url in urls:
                 urlInfo = etree.SubElement(suspiciousURLs, 'url')
                 urlInfo.text = url
-    return etree.tostring(root, pretty_print=True)
+    if hasattr(etree, 'indent'):
+        etree.indent(root)
+    xml_out = etree.tostring(root, encoding='utf-8')
+    if isinstance(xml_out, bytes):
+        return xml_out.decode('utf-8')
+    return xml_out
 
 
 def getPeepJSON(statsDict, version, revision):
@@ -380,32 +385,117 @@ peepdfHeader = versionHeader + newLine * 2 + \
                author + newLine + \
                twitter + newLine
 
-argsParser = optparse.OptionParser(usage='Usage: peepdf.py [options] PDF_file', description=versionHeader)
-argsParser.add_option('-i', '--interactive', action='store_true', dest='isInteractive', default=False,
-                      help='Sets console mode.')
-argsParser.add_option('-s', '--load-script', action='store', type='string', dest='scriptFile',
-                      help='Loads the commands stored in the specified file and execute them.')
-argsParser.add_option('-c', '--check-vt', action='store_true', dest='checkOnVT', default=False,
-                      help='Checks the hash of the PDF file on VirusTotal.')
-argsParser.add_option('-f', '--force-mode', action='store_true', dest='isForceMode', default=False,
-                      help='Sets force parsing mode to ignore errors.')
-argsParser.add_option('-l', '--loose-mode', action='store_true', dest='isLooseMode', default=False,
-                      help='Sets loose parsing mode to catch malformed objects.')
-argsParser.add_option('-m', '--manual-analysis', action='store_true', dest='isManualAnalysis', default=False,
-                      help='Avoids automatic Javascript analysis. Useful with eternal loops like heap spraying.')
-argsParser.add_option('-u', '--update', action='store_true', dest='update', default=False,
-                      help='Updates peepdf with the latest files from the repository.')
-argsParser.add_option('-g', '--grinch-mode', action='store_true', dest='avoidColors', default=False,
-                      help='Avoids colorized output in the interactive console.')
-argsParser.add_option('-v', '--version', action='store_true', dest='version', default=False,
-                      help='Shows program\'s version number.')
-argsParser.add_option('-x', '--xml', action='store_true', dest='xmlOutput', default=False,
-                      help='Shows the document information in XML format.')
-argsParser.add_option('-j', '--json', action='store_true', dest='jsonOutput', default=False,
-                      help='Shows the document information in JSON format.')
-argsParser.add_option('-C', '--command', action='append', type='string', dest='commands',
-                      help='Specifies a command from the interactive console to be executed.')
-(options, args) = argsParser.parse_args()
+argsParser = argparse.ArgumentParser(
+    prog='peepdf.py',
+    usage='%(prog)s [options] [PDF_file]',
+    description=versionHeader,
+    add_help=False,
+)
+argsParser.add_argument(
+    '-h', '--help', action='help', help='Show this help message and exit.'
+)
+argsParser.add_argument(
+    '-i',
+    '--interactive',
+    action='store_true',
+    dest='isInteractive',
+    default=False,
+    help='Sets console mode.',
+)
+argsParser.add_argument(
+    '-s',
+    '--load-script',
+    action='store',
+    type=str,
+    dest='scriptFile',
+    metavar='SCRIPTFILE',
+    help='Loads the commands stored in the specified file and execute them.',
+)
+argsParser.add_argument(
+    '-c',
+    '--check-vt',
+    action='store_true',
+    dest='checkOnVT',
+    default=False,
+    help='Checks the hash of the PDF file on VirusTotal.',
+)
+argsParser.add_argument(
+    '-f',
+    '--force-mode',
+    action='store_true',
+    dest='isForceMode',
+    default=False,
+    help='Sets force parsing mode to ignore errors.',
+)
+argsParser.add_argument(
+    '-l',
+    '--loose-mode',
+    action='store_true',
+    dest='isLooseMode',
+    default=False,
+    help='Sets loose parsing mode to catch malformed objects.',
+)
+argsParser.add_argument(
+    '-m',
+    '--manual-analysis',
+    action='store_true',
+    dest='isManualAnalysis',
+    default=False,
+    help='Avoids automatic Javascript analysis. Useful with eternal loops like heap spraying.',
+)
+argsParser.add_argument(
+    '-u',
+    '--update',
+    action='store_true',
+    dest='update',
+    default=False,
+    help='Updates peepdf with the latest files from the repository.',
+)
+argsParser.add_argument(
+    '-g',
+    '--grinch-mode',
+    action='store_true',
+    dest='avoidColors',
+    default=False,
+    help='Avoids colorized output in the interactive console.',
+)
+argsParser.add_argument(
+    '-v',
+    '--version',
+    action='store_true',
+    dest='version',
+    default=False,
+    help="Shows program's version number.",
+)
+argsParser.add_argument(
+    '-x',
+    '--xml',
+    action='store_true',
+    dest='xmlOutput',
+    default=False,
+    help='Shows the document information in XML format.',
+)
+argsParser.add_argument(
+    '-j',
+    '--json',
+    action='store_true',
+    dest='jsonOutput',
+    default=False,
+    help='Shows the document information in JSON format.',
+)
+argsParser.add_argument(
+    '-C',
+    '--command',
+    action='append',
+    type=str,
+    dest='commands',
+    metavar='COMMANDS',
+    help='Specifies a command from the interactive console to be executed.',
+)
+argsParser.add_argument(
+    'pdf_file', nargs='?', default=None, help='PDF file to analyze.'
+)
+options = argsParser.parse_args()
 
 try:
     # Avoid colors in the output
@@ -422,17 +512,17 @@ try:
         staticColor = Fore.BLUE
         resetColor = Style.RESET_ALL
     if options.version:
-        print peepdfHeader
+        print(peepdfHeader)
     elif options.update:
         updated = False
         newVersion = ''
         localVersion = 'v' + version + ' r' + revision
-        reVersion = 'version = \'(\d\.\d)\'\s*?revision = \'(\d+)\''
+        reVersion = r'version = \'(\d\.\d)\'\s*?revision = \'(\d+)\''
         repURL = 'https://api.github.com/repos/jesparza/peepdf/contents/'
         rawRepURL = 'https://raw.githubusercontent.com/jesparza/peepdf/master/'
-        print '[-] Checking if there are new updates...'
+        print('[-] Checking if there are new updates...')
         try:
-            remotePeepContent = urllib2.urlopen(rawRepURL + 'peepdf.py').read()
+            remotePeepContent = urllib.request.urlopen(rawRepURL + 'peepdf.py').read()
         except:
             sys.exit('[x] Connection error while trying to connect with the repository')
         repVer = re.findall(reVersion, remotePeepContent)
@@ -441,17 +531,17 @@ try:
         else:
             sys.exit('[x] Error getting the version number from the repository')
         if localVersion == newVersion:
-            print '[+] No changes! ;)'
+            print('[+] No changes! ;)')
         else:
-            print '[+] There are new updates!!'
-            print '[-] Getting paths from the repository...'
+            print('[+] There are new updates!!')
+            print('[-] Getting paths from the repository...')
             pathNames = getRepPaths(repURL, '')
-            print '[+] Done'
+            print('[+] Done')
             localFilesInfo = getLocalFilesInfo(pathNames)
-            print '[-] Checking files...'
+            print('[-] Checking files...')
             for path in pathNames:
                 try:
-                    fileContent = urllib2.urlopen(rawRepURL + path).read()
+                    fileContent = urllib.request.urlopen(rawRepURL + path).read()
                 except:
                     sys.exit('[x] Connection error while getting file "' + path + '"')
                 if path in localFilesInfo:
@@ -460,7 +550,7 @@ try:
                     shaHash = hashlib.sha256(fileContent).hexdigest()
                     if shaHash != localFilesInfo[path][0]:
                         open(localFilesInfo[path][1], 'wb').write(fileContent)
-                        print '[+] File "' + path + '" updated successfully'
+                        print('[+] File "' + path + '" updated successfully')
                 else:
                     # File does not exist
                     index = path.rfind('/')
@@ -468,22 +558,23 @@ try:
                         dirsPath = path[:index]
                         absDirsPath = os.path.join(absPeepdfRoot, dirsPath)
                         if not os.path.exists(absDirsPath):
-                            print '[+] New directory "' + dirsPath + '" created successfully'
+                            print('[+] New directory "' + dirsPath + '" created successfully')
                             os.makedirs(absDirsPath)
                     open(os.path.join(absPeepdfRoot, path), 'wb').write(fileContent)
-                    print '[+] New file "' + path + '" created successfully'
+                    print('[+] New file "' + path + '" created successfully')
             message = '[+] peepdf updated successfully'
             if newVersion != '':
                 message += ' to ' + newVersion
-            print message
+            print(message)
 
     else:
-        if len(args) == 1:
-            fileName = args[0]
+        fileName = options.pdf_file
+        if fileName is not None:
             if not os.path.exists(fileName):
                 sys.exit('Error: The file "' + fileName + '" does not exist!!')
-        elif len(args) > 1 or (len(args) == 0 and not options.isInteractive):
-            sys.exit(argsParser.print_help())
+        elif not options.isInteractive:
+            argsParser.print_help()
+            sys.exit(0)
 
         if options.scriptFile is not None:
             if not os.path.exists(options.scriptFile):
@@ -500,13 +591,13 @@ try:
                     pdf.addError(ret[1])
                 else:
                     vtJsonDict = ret[1]
-                    if vtJsonDict.has_key('response_code'):
+                    if 'response_code' in vtJsonDict:
                         if vtJsonDict['response_code'] == 1:
-                            if vtJsonDict.has_key('positives') and vtJsonDict.has_key('total'):
+                            if 'positives' in vtJsonDict and 'total' in vtJsonDict:
                                 pdf.setDetectionRate([vtJsonDict['positives'], vtJsonDict['total']])
                             else:
                                 pdf.addError('Missing elements in the response from VirusTotal!!')
-                            if vtJsonDict.has_key('permalink'):
+                            if 'permalink' in vtJsonDict:
                                 pdf.setDetectionReport(vtJsonDict['permalink'])
                         else:
                             pdf.setDetectionRate(None)
@@ -516,7 +607,10 @@ try:
 
         if options.xmlOutput:
             try:
-                from lxml import etree
+                try:
+                    import xml.etree.ElementTree as etree
+                except ImportError:
+                    from lxml import etree
 
                 xml = getPeepXML(statsDict, version, revision)
                 sys.stdout.write(xml)
@@ -686,7 +780,7 @@ try:
                                              resetColor + str(actions[action]) + newLine
                             if vulns != None:
                                 for vuln in vulns:
-                                    if vulnsDict.has_key(vuln):
+                                    if vuln in vulnsDict:
                                         vulnName = vulnsDict[vuln][0]
                                         vulnCVEList = vulnsDict[vuln][1]
                                         stats += '\t\t' + beforeStaticLabel + vulnName + ' ('
@@ -698,7 +792,7 @@ try:
                                                  resetColor + str(vulns[vuln]) + newLine
                             if elements != None:
                                 for element in elements:
-                                    if vulnsDict.has_key(element):
+                                    if element in vulnsDict:
                                         vulnName = vulnsDict[element][0]
                                         vulnCVEList = vulnsDict[element][1]
                                         stats += '\t\t' + beforeStaticLabel + vulnName + ' ('
@@ -717,7 +811,7 @@ try:
                                 stats += '\t\t' + url + newLine
                         stats += newLine * 2
                 if fileName != None:
-                    print stats
+                    print(stats)
                 if options.isInteractive:
                     from PDFConsole import PDFConsole
 
@@ -729,7 +823,7 @@ try:
                             sys.exit()
                         except:
                             errorMessage = '*** Error: Exception not handled using the interactive console!! Please, report it to the author!!'
-                            print errorColor + errorMessage + resetColor + newLine
+                            print(errorColor + errorMessage + resetColor + newLine)
                             traceback.print_exc(file=open(errorsFile, 'a'))
 except Exception as e:
     if len(e.args) == 2:
@@ -739,7 +833,7 @@ except Exception as e:
     if excName == None or excName != 'PeepException':
         errorMessage = '*** Error: Exception not handled!!'
         traceback.print_exc(file=open(errorsFile, 'a'))
-    print errorColor + errorMessage + resetColor + newLine
+    print(errorColor + errorMessage + resetColor + newLine)
 finally:
     if os.path.exists(errorsFile):
         message = newLine + 'Please, don\'t forget to report the errors found:' + newLine * 2

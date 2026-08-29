@@ -40,7 +40,7 @@ class AnsiToWin32(object):
     sequences from the text, and if outputting to a tty, will convert them into
     win32 function calls.
     '''
-    ANSI_RE = re.compile('\033\[((?:\d|;)*)([a-zA-Z])')
+    ANSI_RE = re.compile(r'\033' + r'\[((?:\d|;)*)([a-zA-Z])')
 
     def __init__(self, wrapped, convert=None, strip=None, autoreset=False):
         # The wrapped stream (normally sys.stdout or sys.stderr)
@@ -118,7 +118,7 @@ class AnsiToWin32(object):
             self.wrapped.flush()
         if self.autoreset:
             self.reset_all()
-        
+
 
     def reset_all(self):
         if self.convert:

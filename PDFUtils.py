@@ -25,7 +25,11 @@
     Module with some misc functions
 '''
 
-import os, re, htmlentitydefs, json, urllib, urllib2
+import html.entities
+import json
+import os
+import re
+import urllib.request
 
 def clearScreen():
 	'''
@@ -77,7 +81,7 @@ def decodeName(name):
 		@return: A tuple (status,statusContent), where statusContent is the decoded PDF name in case status = 0 or an error in case status = -1
 	'''
 	decodedName = name
-	hexNumbers = re.findall('#([0-9a-f]{2})', name, re.DOTALL | re.IGNORECASE)
+	hexNumbers = re.findall(r'#([0-9a-f]{2})', name, re.DOTALL | re.IGNORECASE)
 	for hexNumber in hexNumbers:
 		try:
 			decodedName = decodedName.replace('#'+hexNumber,chr(int(hexNumber,16)))
@@ -93,7 +97,7 @@ def decodeString(string):
 		@return A tuple (status,statusContent), where statusContent is the decoded PDF string in case status = 0 or an error in case status = -1
 	'''
 	decodedString = string
-	octalNumbers = re.findall('\\\\([0-7]{1-3})', decodedString, re.DOTALL)
+	octalNumbers = re.findall(r'\\\\([0-7]{1-3})', decodedString, re.DOTALL)
 	for octal in octalNumbers:
 		try:
 			decodedString = decodedString.replace('\\\\'+octal,chr(int(octal,8)))
@@ -166,7 +170,7 @@ def escapeString(string):
 	for i in range(len(string)):
 		if string[i] in toEscapeChars and (i == 0 or string[i-1] != '\\'):
 			if string[i] == '\\':
-				if len(string) > i+1 and re.match('[0-7]',string[i+1]):
+				if len(string) > i+1 and re.match(r'[0-7]',string[i+1]):
 					escapedValue += string[i]
 				else:
 					escapedValue += '\\'+string[i]
@@ -253,7 +257,7 @@ def getBytesFromBits(bitsStream):
     if not isinstance(bitsStream,str):
         return (-1,'The bitsStream must be a string')
     bytes = ''
-    if re.match('[01]*$',bitsStream):
+    if re.match(r'[01]*$',bitsStream):
         try:
             for i in range(0,len(bitsStream),8):
                 bits = bitsStream[i:i+8]
@@ -309,23 +313,23 @@ def hexToString(hexString):
 def numToHex(num, numBytes):
     '''
         Given a number returns its hexadecimal format with the specified length, adding '\0' if necessary
-		
-		@param num: A number (int)
-		@param numBytes: Length of the output (int)
-		@return: A tuple (status,statusContent), where statusContent is a number in hexadecimal format in case status = 0 or an error in case status = -1
-	'''
+
+        @param num: A number (int)
+        @param numBytes: Length of the output (int)
+        @return: A tuple (status,statusContent), where statusContent is a number in hexadecimal format in case status = 0 or an error in case status = -1
+    '''
     hexString = ''
     if not isinstance(num,int):
-    	return (-1,'Bad number')
+        return (-1,'Bad number')
     try:
-	    hexNumber = hex(num)[2:]
-	    if len(hexNumber) % 2 != 0:
-	        hexNumber = '0'+hexNumber
-	    for i in range(0,len(hexNumber)-1,2):
-	        hexString += chr(int(hexNumber[i]+hexNumber[i+1],16))
-	    hexString = '\0'*(numBytes-len(hexString))+hexString
+        hexNumber = hex(num)[2:]
+        if len(hexNumber) % 2 != 0:
+            hexNumber = '0'+hexNumber
+        for i in range(0,len(hexNumber)-1,2):
+            hexString += chr(int(hexNumber[i]+hexNumber[i+1],16))
+        hexString = '\0'*(numBytes-len(hexString))+hexString
     except:
-		return (-1,'Error in hexadecimal conversion')
+        return (-1,'Error in hexadecimal conversion')
     return (0,hexString)
                   		
 def numToString(num, numDigits):
@@ -361,19 +365,19 @@ def unescapeHTMLEntities(text):
             # character reference
             try:
                 if text[:3] == "&#x":
-                    return unichr(int(text[3:-1], 16))
+                    return chr(int(text[3:-1], 16))
                 else:
-                    return unichr(int(text[2:-1]))
+                    return chr(int(text[2:-1]))
             except ValueError:
                 pass
         else:
             # named entity
             try:
-                text = unichr(htmlentitydefs.name2codepoint[text[1:-1]])
+                text = chr(html.entities.name2codepoint[text[1:-1]])
             except KeyError:
                 pass
         return text # leave as is
-    return re.sub("&#?\w+;", fixup, text)
+    return re.sub(r"&#?\w+;", fixup, text)
    
 def unescapeString(string):
 	'''
@@ -423,12 +427,14 @@ def vtcheck(md5, vtKey):
         @param vtKey: The VirusTotal API key needed to perform the request
         @return: A dictionary with the result of the request
     '''
+    if not vtKey:
+        return (-1, 'VirusTotal API key is not configured')
     vtUrl = 'https://www.virustotal.com/vtapi/v2/file/report'
     parameters = {'resource':md5,'apikey':vtKey}
     try:
-        data = urllib.urlencode(parameters)
-        req = urllib2.Request(vtUrl, data)
-        response = urllib2.urlopen(req)
+        data = urllib.parse.urlencode(parameters)
+        req = urllib.request.Request(vtUrl, data.encode('utf-8'))
+        response = urllib.request.urlopen(req)
         jsonResponse = response.read()
     except:
         return (-1, 'The request to VirusTotal has not been successful')

@@ -3,6 +3,7 @@
 # by Einar Lielmanis <einar@jsbeautifier.org>
 #
 #     written by Stefano Sanfilippo <a.little.coder@gmail.com>
+#     edited by Christoph Linke
 #
 # usage:
 #
@@ -36,7 +37,7 @@ import base64
 # pylint: disable=F0401
 # pylint: disable=E0611
 try:
-    from urllib import unquote
+    from urllib.parse import unquote
 except ImportError:
     from urllib.parse import unquote
 

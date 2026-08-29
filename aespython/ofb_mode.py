@@ -34,9 +34,9 @@ import unittest
 class TestEncryptionMode(unittest.TestCase):
     def test_mode(self):
         #Self test
-        import key_expander
-        import aes_cipher
-        import test_keys
+        from . import key_expander
+        from . import aes_cipher
+        from . import test_keys
 
         test_data = test_keys.TestKeys()
 
@@ -49,13 +49,13 @@ class TestEncryptionMode(unittest.TestCase):
 
         test_ofb.set_iv(test_data.test_mode_iv)
         for k in range(4):
-            self.assertEquals(len([i for i, j in zip(test_data.test_ofb_ciphertext[k],test_ofb.encrypt_block(test_data.test_mode_plaintext[k])) if i == j]),
+            self.assertEqual(len([i for i, j in zip(test_data.test_ofb_ciphertext[k],test_ofb.encrypt_block(test_data.test_mode_plaintext[k])) if i == j]),
                 16,
                 msg='OFB encrypt test block' + str(k))
 
         test_ofb.set_iv(test_data.test_mode_iv)
         for k in range(4):
-            self.assertEquals(len([i for i, j in zip(test_data.test_mode_plaintext[k],test_ofb.decrypt_block(test_data.test_ofb_ciphertext[k])) if i == j]),
+            self.assertEqual(len([i for i, j in zip(test_data.test_mode_plaintext[k],test_ofb.decrypt_block(test_data.test_ofb_ciphertext[k])) if i == j]),
                 16,
                 msg='OFB decrypt test block' + str(k))
 
