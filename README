@@ -6,34 +6,20 @@ http://twitter.com/peepdf
 
 ** Dependencies **
 
-- In order to analyse Javascript code "PyV8" is needed:
+- Python 3.12+ is required.
 
-    https://github.com/buffer/pyv8
+- XML output is natively supported using the Python Standard Library (`xml.etree.ElementTree`). No external `lxml` installation is required!
 
-    git clone https://github.com/buffer/pyv8.git
-    cd pyv8
-    python setup.py build
-    sudo python setup.py install
-    cd ..
-    rm -rf pyv8
+- VirusTotal API lookup requires setting the `PEEPDF_VT_KEY` environment variable:
 
+    export PEEPDF_VT_KEY="your_virustotal_api_key"
 
-- The "sctest" command is a wrapper of "sctest" (libemu). Besides libemu pylibemu is used and must be installed:
+- Optional dependencies for advanced analysis:
 
-    https://github.com/buffer/libemu
-    https://github.com/buffer/pylibemu
-
-    git clone https://github.com/buffer/libemu.git
-    autoreconf -v -i
-    ./configure --prefix=/opt/libemu
-    sudo make install
-    sudo pip install pylibemu
-
-
-- To support XML output "lxml" is needed:
-
-    http://lxml.de/installation.html
-    
+  * In order to analyse Javascript code "PyV8" or compatible JS engine wrappers can be installed.
+  * The "sctest" command uses pylibemu for shellcode analysis.
+  * Colorama (included or installed via pip) for colorized terminal output.
+  * Pillow / PIL for image processing.
 
 - Included modules: lzw, colorama, jsbeautifier, ccitt, pythonaes (Thanks to all the developers!!)
 
@@ -41,7 +27,7 @@ http://twitter.com/peepdf
 
 ** Installation **
 
-No installation is needed apart of the commented dependencies, just execute it!
+No installation is needed, just execute it with Python 3!
 
 
 
@@ -49,33 +35,37 @@ No installation is needed apart of the commented dependencies, just execute it!
 
 There are two important options when peepdf is executed:
 
--f: Ignores the parsing errors. Analysing malicious files propably leads to parsing errors, so this parameter should be set.
+-f: Ignores the parsing errors. Analysing malicious files probably leads to parsing errors, so this parameter should be set.
 -l: Sets the loose mode, so does not search for the endobj tag because it's not obligatory. Helpful with malformed files.
+
+To display all available parameters and options, run:
+
+    python3 peepdf.py -h
 
 
 * Simple execution
 
 Shows the statistics of the file after being decoded/decrypted and analysed:
 
-    python peepdf.py [options] pdf_file
+    python3 peepdf.py [options] pdf_file
 
 
 * Interactive console
 
-Executes the interactive console to let play with the PDF file:
+Executes the interactive console to play with the PDF file:
 
-    python peepdf.py -i [options] pdf_file
+    python3 peepdf.py -i [options] pdf_file
 
 If no PDF file is specified it's possible to use the decode/encode/js*/sctest commands and create a new PDF file:
 
-    python peepdf.py -i
+    python3 peepdf.py -i
 
 
 * Batch execution
 
 It's possible to use a commands file to specify the commands to be executed in the batch mode. This type of execution is good to automatise analysis of several files:
 
-    python peepdf.py [options] -s commands_file pdf_file
+    python3 peepdf.py [options] -s commands_file pdf_file
 
 
 
@@ -83,7 +73,7 @@ It's possible to use a commands file to specify the commands to be executed in t
 
 Just type this and you will be updated to the latest version from the repository:
 
-    python peepdf.py -u
+    python3 peepdf.py -u
 
 
 
