@@ -36,8 +36,8 @@ import hashlib
 import traceback
 import json
 from datetime import datetime
-from PDFCore import PDFParser, vulnsDict
-from PDFUtils import vtcheck
+from pdf_core import PDFParser, vulnsDict
+from pdf_utils import vtcheck
 
 
 VT_KEY = os.environ.get('PEEPDF_VT_KEY')
@@ -633,7 +633,7 @@ try:
                 except:
                     COLORIZED_OUTPUT = False
             if options.scriptFile is not None:
-                from PDFConsole import PDFConsole
+                from pdf_console import PDFConsole
 
                 scriptFileObject = open(options.scriptFile, 'rb')
                 console = PDFConsole(pdf, VT_KEY, options.avoidColors, stdin=scriptFileObject)
@@ -645,7 +645,7 @@ try:
                     traceback.print_exc(file=open(errorsFile, 'a'))
                     raise Exception('PeepException', 'Send me an email ;)')
             elif options.commands is not None:
-                from PDFConsole import PDFConsole
+                from pdf_console import PDFConsole
 
                 console = PDFConsole(pdf, VT_KEY, options.avoidColors)
                 try:
@@ -813,7 +813,7 @@ try:
                 if fileName != None:
                     print(stats)
                 if options.isInteractive:
-                    from PDFConsole import PDFConsole
+                    from pdf_console import PDFConsole
 
                     console = PDFConsole(pdf, VT_KEY, options.avoidColors)
                     while not console.leaving:

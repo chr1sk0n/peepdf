@@ -7,7 +7,7 @@ import re
 import struct
 import sys
 
-from JSAnalysis import analyseJS, isJavascript
+from js_analysis import analyseJS, isJavascript
 from parser_context import ParserContext, get_parser_context, set_parser_context
 from pdf_constants import (
     MAL_ALL,
@@ -51,7 +51,7 @@ from pdf_structure import (
     PDFFile,
     PDFTrailer,
 )
-from PDFCrypto import (
+from pdf_crypto import (
     RC4,
     computeEncryptionKey,
     computeObjectKey,
@@ -60,8 +60,8 @@ from PDFCrypto import (
     isOwnerPass,
     isUserPass,
 )
-from PDFFilters import decodeStream, encodeStream
-from PDFUtils import (
+from pdf_filters import decodeStream, encodeStream
+from pdf_utils import (
     encodeName,
     encodeString,
     escapeString,

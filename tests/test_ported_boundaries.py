@@ -2,9 +2,9 @@ import unittest
 import zlib
 from pathlib import Path
 
-from PDFCore import PDFDictionary, PDFParser, ParserContext, get_parser_context
-from PDFFilters import decodeStream
-from PDFUtils import vtcheck
+from pdf_core import PDFDictionary, PDFParser, ParserContext, get_parser_context
+from pdf_filters import decodeStream
+from pdf_utils import vtcheck
 
 
 class FilterRegistryTests(unittest.TestCase):
@@ -79,15 +79,20 @@ if __name__ == "__main__":
 
 class ModuleStructureTests(unittest.TestCase):
     def test_reexported_facade_symbols(self):
+        import pdf_core
         import PDFCore
         import pdf_constants
         import pdf_objects
         import pdf_structure
         import pdf_parser
 
+        self.assertIs(pdf_core.PDFParser, pdf_parser.PDFParser)
         self.assertIs(PDFCore.PDFParser, pdf_parser.PDFParser)
+        self.assertIs(pdf_core.PDFFile, pdf_structure.PDFFile)
         self.assertIs(PDFCore.PDFFile, pdf_structure.PDFFile)
+        self.assertIs(pdf_core.PDFDictionary, pdf_objects.PDFDictionary)
         self.assertIs(PDFCore.PDFDictionary, pdf_objects.PDFDictionary)
+        self.assertEqual(pdf_core.MAL_ALL, pdf_constants.MAL_ALL)
         self.assertEqual(PDFCore.MAL_ALL, pdf_constants.MAL_ALL)
 
     def test_direct_modular_imports(self):
