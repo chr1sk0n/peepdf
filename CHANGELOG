@@ -1,4 +1,19 @@
 -----------------------------------------------
+peepdf 1.0.0 r300, 2026-08-29
+-----------------------------------------------
+
+    * Major Modernization & Upgrade:
+
+		- Upgraded codebase for Python 3.12+ compatibility with zero mandatory external dependencies.
+		- Isolated execution flags (force_mode, manual_analysis) in a thread/task-local ParserContext using contextvars.ContextVar.
+		- Refactored monolithic PDFCore.py into cohesive submodules (pdf_constants, pdf_objects, pdf_structure, pdf_parser, pdf_core) while retaining backward-compatible facades.
+		- Migrated CLI option parsing from deprecated optparse to standard argparse.
+		- Implemented native XML and JSON output generation using standard library (xml.etree.ElementTree, json), eliminating lxml dependency.
+		- Renamed Python modules to PEP 8 snake_case filenames (js_analysis, pdf_console, pdf_crypto, pdf_filters, pdf_utils).
+		- Added unit test suite in tests/ and Architectural Decision Records (ADRs) in docs/adr/.
+		- Resolved file resource leaks by enforcing explicit 'with open(...)' resource management.
+
+-----------------------------------------------
 peepdf 0.3 r235, 2014-06-09
 -----------------------------------------------
 
