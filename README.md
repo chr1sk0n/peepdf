@@ -195,13 +195,14 @@ Key architectural decisions for the modernization of `peepdf` are documented in 
 ---
 
 ## Included In
-* **REMnux** (Reverse Engineering Malware Linux Distribution)
-* **Kali Linux**
-* **BackTrack 5**
+* **REMnux** (Reverse Engineering Malware Linux Distribution), only version 0.3
+* **Kali Linux**, , only version 0.3
+* **BackTrack 5**, only version 0.3
 
 ---
 
 ## License & Author
 
 * **Author**: Jose Miguel Esparza (<jesparza@eternal-todo.com>)
+* Christoph Linke
 * **License**: GNU General Public License v3.0 (GPLv3)
