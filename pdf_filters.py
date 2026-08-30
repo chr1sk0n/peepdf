@@ -261,7 +261,10 @@ def flateDecode(stream, parameters):
     '''
     decodedStream = ''
     try:
-        decodedStream = zlib.decompress(stream)
+        compressedStream = stream.encode('latin-1') if isinstance(stream, str) else stream
+        decodedStream = zlib.decompress(compressedStream)
+        if isinstance(stream, str):
+            decodedStream = decodedStream.decode('latin-1')
     except:
         return (-1, 'Error decompressing string')
 
@@ -476,7 +479,7 @@ def pre_prediction(stream, predictor, columns, colors, bits):
     # PNG prediction
     if predictor >= 10 and predictor <= 15:
         # PNG prediction can vary from row to row
-        for row in range(len(stream) / columns):
+        for row in range(len(stream) // columns):
             rowdata = [ord(x) for x in stream[(row * columns):((row + 1) * columns)]]
             filterByte = predictor - 10
             rowdata = [filterByte] + rowdata
@@ -511,12 +514,12 @@ def post_prediction(decodedStream, predictor, columns, colors, bits):
     '''
 
     output = ''
-    bytesPerRow = (colors * bits * columns + 7) / 8
+    bytesPerRow = (colors * bits * columns + 7) // 8
 
     # TIFF - 2
     # http://www.gnupdf.org/PNG_and_TIFF_Predictors_Filter#TIFF
     if predictor == 2:
-        numRows = len(decodedStream) / bytesPerRow
+        numRows = len(decodedStream) // bytesPerRow
         bitmask = 2 ** bits - 1
         outputBitsStream = ''
         for rowIndex in range(numRows):
@@ -540,9 +543,9 @@ def post_prediction(decodedStream, predictor, columns, colors, bits):
     # http://www.gnupdf.org/PNG_and_TIFF_Predictors_Filter#TIFF
     elif predictor >= 10 and predictor <= 15:
         bytesPerRow += 1
-        numRows = (len(decodedStream) + bytesPerRow - 1) / bytesPerRow
+        numRows = (len(decodedStream) + bytesPerRow - 1) // bytesPerRow
         numSamplesPerRow = columns + 1
-        bytesPerSample = (colors * bits + 7) / 8
+        bytesPerSample = (colors * bits + 7) // 8
         upRowdata = (0,) * numSamplesPerRow
         for row in range(numRows):
             rowdata = [ord(x) for x in decodedStream[(row * bytesPerRow):((row + 1) * bytesPerRow)]]
@@ -574,7 +577,7 @@ def post_prediction(decodedStream, predictor, columns, colors, bits):
                         prevSample = 0
                     else:
                         prevSample = rowdata[i - bytesPerSample]
-                    rowdata[i] = (rowdata[i] + ((prevSample + upSample) / 2)) % 256
+                    rowdata[i] = (rowdata[i] + ((prevSample + upSample) // 2)) % 256
             elif filterByte == 4:
                 # Paeth - 14
                 for i in range(1, numSamplesPerRow):

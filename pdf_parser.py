@@ -297,7 +297,13 @@ class PDFParser :
                                 self.pdfFile.addError('Indirect object is None')
                     else:
                         if not forceMode:
-                            sys.exit('Error: An error has occurred while parsing an indirect object!!')
+                            sys.exit(
+                                'Error: An error has occurred while parsing indirect object '
+                                + str(objectHeader)
+                                + ': '
+                                + str(ret[1])
+                                + '!!'
+                            )
                         else:
                             self.pdfFile.addError('Error parsing object: '+str(objectHeader)+' ('+str(ret[1])+')')
             else:
@@ -454,8 +460,8 @@ class PDFParser :
             pdfIndirectObject.setObject(object)
             ret = self.readSymbol(rawIndirectObject, 'endobj', False)
             pdfIndirectObject.setSize(self.charCounter)
-        except:
-            errorMessage = 'Unspecified parsing error'
+        except Exception as error:
+            errorMessage = 'Unspecified parsing error: ' + str(error)
             self.pdfFile.addError(errorMessage)
             return (-1, errorMessage)
         self.pdfFile.setMaxObjectId(id)
@@ -797,7 +803,7 @@ class PDFParser :
                             else:
                                 return (-1, errorMessage)
                         else:
-                            numSubsections = len(subsectionIndexes) / 2
+                            numSubsections = len(subsectionIndexes) // 2
                     else:
                         errorMessage = 'Bad object type for /Index element'
                         if get_parser_context().force_mode:
@@ -813,17 +819,23 @@ class PDFParser :
                         if bytesPerField[0] == 0:
                             f1 = 1
                         else:
-                            f1 = int(entryBytes[:bytesPerField[0]].encode('hex'),16)
+                            f1 = int.from_bytes(entryBytes[:bytesPerField[0]].encode('latin-1'), 'big')
                         if bytesPerField[1] == 0:
                             f2 = 0
                         else:
-                            f2 = int(entryBytes[bytesPerField[0]:bytesPerField[0]+bytesPerField[1]].encode('hex'),16)
+                            f2 = int.from_bytes(
+                                entryBytes[bytesPerField[0]:bytesPerField[0]+bytesPerField[1]].encode('latin-1'),
+                                'big',
+                            )
                         if bytesPerField[2] == 0:
                             f3 = 0
                         else:
-                            f3 = int(entryBytes[bytesPerField[0]+bytesPerField[1]:].encode('hex'),16)
-                    except:
-                        errorMessage = 'Error in hexadecimal conversion'
+                            f3 = int.from_bytes(
+                                entryBytes[bytesPerField[0]+bytesPerField[1]:].encode('latin-1'),
+                                'big',
+                            )
+                    except Exception as error:
+                        errorMessage = 'Error in hexadecimal conversion: ' + type(error).__name__ + ' ' + repr(error)
                         if get_parser_context().force_mode:
                             pdfCrossRefSection.addError(errorMessage)
                         else:
@@ -850,7 +862,7 @@ class PDFParser :
                             return (-1, errorMessage)
                     pdfCrossRefSubSection.setEntries(entries[firstEntry:firstEntry+numObjectsInSubsection])
                     pdfCrossRefSection.addSubsection(pdfCrossRefSubSection)
-                    firstentry = numObjectsInSubsection
+                    firstEntry += numObjectsInSubsection
                     index += 2
                 return (0,pdfCrossRefSection)
             else:

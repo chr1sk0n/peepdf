@@ -504,8 +504,8 @@ class PDFName (PDFObject) :
         try:
             for hexNumber in hexNumbers:
                 self.value = self.value.replace('#' + hexNumber, chr(int(hexNumber,16)))
-        except:
-            errorMessage = 'Error in hexadecimal conversion'
+        except Exception as error:
+            errorMessage = 'Error in hexadecimal conversion: ' + type(error).__name__ + ' ' + repr(error)
             self.addError(errorMessage)
             return (-1,errorMessage)
         return (0,'')
@@ -722,10 +722,10 @@ class PDFHexString (PDFObject) :
                     tmpValue = self.rawValue
                     if len(tmpValue) % 2 != 0:
                         tmpValue += '0'
-                    self.value = tmpValue.decode('hex')
+                    self.value = bytes.fromhex(tmpValue).decode('latin-1')
                 else:
                     # New decoded value
-                    self.rawValue = self.value.encode('hex')
+                    self.rawValue = self.value.encode('latin-1').hex()
                 self.encryptedValue = self.value
             except:
                 errorMessage = 'Error in hexadecimal conversion'
