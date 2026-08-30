@@ -33,7 +33,7 @@ With `peepdf`, you can inspect all objects in a document, highlight suspicious e
 
 ## Modular Architecture & Modernization
 
-The codebase has been modernized for **Python 3.12+**, adhering to Clean Code and SOLID principles:
+The codebase has been modernized for **Python 3.12+**, adhering to Clean Code and KISS (Keep It Simple, Stupid), DRY (Don't Repeat Yourself), YAGNI (You Aren't Gonna Need It), Composition over Inheritance and Duck Typing principles:
 
 * `parser_context.py`: Thread/task-isolated context manager (`ParserContext`) backed by `contextvars.ContextVar` for safe, isolated execution flags (`force_mode`, `manual_analysis`).
 * `pdf_constants.py`: Delimiters, error codes, and vulnerability dictionaries (`vulnsDict`, `jsVulns`).
